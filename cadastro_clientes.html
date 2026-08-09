@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F8;
+    --surface:#FFFFFF;
+    --ink:#1B2334;
+    --ink-soft:#5B6472;
+    --accent:#2F6F63;
+    --accent-dark:#234F46;
+    --accent-soft:#E4F1EE;
+    --birthday:#D98A2B;
+    --birthday-soft:#FDF3E1;
+    --border:#E3E6EB;
+    --danger:#C4534A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:28px 20px 80px;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:16px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:30px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0;
+  }
+  .stats{
+    display:flex;
+    gap:10px;
+  }
+  .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 14px;
+    text-align:center;
+    min-width:76px;
+  }
+  .stat .n{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:20px;
+    font-weight:600;
+    display:block;
+    line-height:1.1;
+  }
+  .stat .l{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .stat.today .n{color:var(--birthday);}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 16px;
+  }
+  form{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+    min-width:160px;
+  }
+  label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  input{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:#fff;
+  }
+  input:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+    border-color:var(--accent);
+  }
+  button{
+    border:none;
+    border-radius:8px;
+    padding:11px 18px;
+    font-size:14px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-primary:disabled{background:#A9B4B1;cursor:not-allowed;}
+
+  .list-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14px;
+    padding:30px 10px;
+  }
+  ul{list-style:none;margin:0;padding:0;}
+  li.client{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:14px 16px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  li.client.today{
+    border-color:var(--birthday);
+    background:var(--birthday-soft);
+  }
+  li.client.today::before{
+    content:"HOJE";
+    position:absolute;
+    top:8px;
+    right:-26px;
+    transform:rotate(45deg);
+    background:var(--birthday);
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.05em;
+    padding:2px 30px;
+  }
+  .c-name{
+    font-weight:600;
+    font-size:15px;
+  }
+  .c-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  li.client.today .c-meta{color:#8A5A16;}
+  .c-age{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    padding:4px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  li.client.today .c-age{
+    background:var(--birthday);
+    color:#fff;
+  }
+  .del{
+    background:transparent;
+    color:var(--danger);
+    border:1px solid transparent;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:600;
+  }
+  .del:hover{background:#FBEAE8;border-color:#F0C7C2;}
+  .row-right{display:flex;align-items:center;gap:10px;}
+  footer{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:12px;
+    margin-top:26px;
+  }
+  .loading{text-align:center;color:var(--ink-soft);font-size:13px;padding:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Cadastro de Clientes</h1>
+      <p class="sub">Nome, data de nascimento, idade e aniversariantes do dia</p>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="n" id="statTotal">0</span>
+        <span class="l">Clientes</span>
+      </div>
+      <div class="stat today">
+        <span class="n" id="statToday">0</span>
+        <span class="l">Hoje</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Novo cliente</h2>
+    <form id="form">
+      <div class="field">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" placeholder="Ex: Maria Souza" required>
+      </div>
+      <div class="field">
+        <label for="nasc">Data de nascimento</label>
+        <input type="date" id="nasc" required>
+      </div>
+      <button type="submit" class="btn-primary" id="saveBtn">Adicionar</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="list-head">
+      <h2 style="margin:0;">Clientes cadastrados</h2>
+    </div>
+    <div id="listArea">
+      <div class="loading">Carregando dados salvos…</div>
+    </div>
+  </div>
+
+  <footer>Os dados ficam salvos automaticamente e continuam disponíveis da próxima vez que você abrir este app.</footer>
+</div>
+
+<script>
+const form = document.getElementById('form');
+const nomeInput = document.getElementById('nome');
+const nascInput = document.getElementById('nasc');
+const listArea = document.getElementById('listArea');
+const statTotal = document.getElementById('statTotal');
+const statToday = document.getElementById('statToday');
+const saveBtn = document.getElementById('saveBtn');
+
+const STORAGE_KEY = 'clientes';
+let clientes = [];
+
+function calcIdade(dataNascStr){
+  const nasc = new Date(dataNascStr + 'T00:00:00');
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return idade;
+}
+
+function ehAniversarioHoje(dataNascStr){
+  const nasc = new Date(dataNascStr + 'T00:00:00');
+  const hoje = new Date();
+  return nasc.getDate() === hoje.getDate() && nasc.getMonth() === hoje.getMonth();
+}
+
+function formatarData(dataNascStr){
+  const [ano, mes, dia] = dataNascStr.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+function proximoAniversarioDias(dataNascStr){
+  const nasc = new Date(dataNascStr + 'T00:00:00');
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  let prox = new Date(hoje.getFullYear(), nasc.getMonth(), nasc.getDate());
+  if (prox < hoje) prox = new Date(hoje.getFullYear()+1, nasc.getMonth(), nasc.getDate());
+  return Math.round((prox - hoje) / 86400000);
+}
+
+async function carregar(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY, false);
+    clientes = result ? JSON.parse(result.value) : [];
+  }catch(e){
+    clientes = [];
+  }
+  render();
+}
+
+async function salvar(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(clientes), false);
+  }catch(e){
+    console.error('Erro ao salvar', e);
+  }
+}
+
+function render(){
+  if (clientes.length === 0){
+    listArea.innerHTML = '<div class="empty">Nenhum cliente cadastrado ainda. Adicione o primeiro acima.</div>';
+    statTotal.textContent = '0';
+    statToday.textContent = '0';
+    return;
+  }
+
+  const ordenados = [...clientes].sort((a,b)=>{
+    const diasA = proximoAniversarioDias(a.nascimento);
+    const diasB = proximoAniversarioDias(b.nascimento);
+    return diasA - diasB;
+  });
+
+  let aniversariantesHoje = 0;
+  const html = ordenados.map(c=>{
+    const idade = calcIdade(c.nascimento);
+    const hoje = ehAniversarioHoje(c.nascimento);
+    if (hoje) aniversariantesHoje++;
+    return `
+      <li class="client${hoje ? ' today' : ''}">
+        <div>
+          <div class="c-name">${escapeHtml(c.nome)}</div>
+          <div class="c-meta">${formatarData(c.nascimento)}</div>
+        </div>
+        <div class="row-right">
+          <span class="c-age">${idade} anos</span>
+          <button class="del" data-id="${c.id}">Remover</button>
+        </div>
+      </li>`;
+  }).join('');
+
+  listArea.innerHTML = `<ul>${html}</ul>`;
+  statTotal.textContent = clientes.length;
+  statToday.textContent = aniversariantesHoje;
+
+  listArea.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', ()=> remover(btn.dataset.id));
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function remover(id){
+  clientes = clientes.filter(c => c.id !== id);
+  render();
+  await salvar();
+}
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const nome = nomeInput.value.trim();
+  const nasc = nascInput.value;
+  if (!nome || !nasc) return;
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Salvando…';
+
+  clientes.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+    nome,
+    nascimento: nasc
+  });
+
+  render();
+  await salvar();
+
+  nomeInput.value = '';
+  nascInput.value = '';
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Adicionar';
+  nomeInput.focus();
+});
+
+carregar();
+</script>
+</body>
+</html>
