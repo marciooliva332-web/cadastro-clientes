@@ -65,6 +65,8 @@
   .stat.clickable:hover{border-color:var(--birthday);}
   .stat.today.active{background:var(--birthday);border-color:var(--birthday);}
   .stat.today.active .n,.stat.today.active .l{color:#fff;}
+  .stat.prox10.active{background:var(--accent);border-color:var(--accent);}
+  .stat.prox10.active .n,.stat.prox10.active .l{color:#fff;}
 
   .card{
     background:var(--surface);
@@ -99,8 +101,6 @@
   textarea{resize:vertical;min-height:44px;width:100%;}
   textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
   .field-full{flex-basis:100%;}
-  .grupo-row{display:flex;gap:8px;}
-  .grupo-row select{flex:1;}
   button{
     border:none;
     border-radius:8px;
@@ -114,8 +114,6 @@
   .btn-primary{background:var(--accent);color:#fff;}
   .btn-primary:hover{background:var(--accent-dark);}
   .btn-primary:disabled{background:#A9B4B1;cursor:not-allowed;}
-  .btn-add-grupo{background:var(--accent-soft);color:var(--accent-dark);padding:10px 14px;font-size:13px;white-space:nowrap;}
-  .btn-add-grupo:hover{background:var(--accent);color:#fff;}
   .btn-secondary{background:transparent;color:var(--ink-soft);border:1px solid var(--border);}
   .btn-secondary:hover{border-color:var(--danger);color:var(--danger);}
 
@@ -277,6 +275,10 @@
         <span class="n" id="statToday">0</span>
         <span class="l">Hoje</span>
       </div>
+      <div class="stat prox10 clickable" id="statProx10Box" title="Clique para ver aniversariantes dos próximos 10 dias">
+        <span class="n" id="statProx10">0</span>
+        <span class="l">Próx. 10 dias</span>
+      </div>
     </div>
   </header>
 
@@ -299,12 +301,8 @@
       </div>
       <div class="field">
         <label for="grupo">Grupo</label>
-        <div class="grupo-row">
-          <select id="grupo">
-            <option value="">Sem grupo</option>
-          </select>
-          <button type="button" class="btn-add-grupo" id="novoGrupoBtn">+ Novo</button>
-        </div>
+        <input type="text" id="grupo" list="listaGrupos" placeholder="Ex: Empresa, Família…">
+        <datalist id="listaGrupos"></datalist>
       </div>
       <div class="field field-full">
         <label for="observacao">Observação</label>
@@ -320,7 +318,7 @@
       <h2 style="margin:0;">Aniversariantes cadastrados</h2>
     </div>
     <div class="filter-bar">
-      <input type="text" id="busca" placeholder="Buscar por nome…">
+      <input type="text" id="busca" placeholder="Buscar por nome ou grupo…">
       <div class="filter-row">
         <button type="button" class="mes-toggle" id="mesToggle">Filtrar por mês</button>
         <button type="button" class="clear-filters" id="clearFilters">Limpar filtros</button>
@@ -365,14 +363,15 @@ const listArea = document.getElementById('listArea');
 const statTotal = document.getElementById('statTotal');
 const statToday = document.getElementById('statToday');
 const statTodayBox = document.getElementById('statTodayBox');
+const statProx10 = document.getElementById('statProx10');
+const statProx10Box = document.getElementById('statProx10Box');
 const saveBtn = document.getElementById('saveBtn');
 const buscaInput = document.getElementById('busca');
 const mesToggle = document.getElementById('mesToggle');
 const mesGrid = document.getElementById('mesGrid');
 const clearFiltersBtn = document.getElementById('clearFilters');
 const formTitle = document.getElementById('formTitle');
-const grupoSelect = document.getElementById('grupo');
-const novoGrupoBtn = document.getElementById('novoGrupoBtn');
+const grupoInput = document.getElementById('grupo');
 const observacaoInput = document.getElementById('observacao');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 
@@ -382,6 +381,7 @@ let editandoId = null;
 let filtroTexto = '';
 let filtroMes = null;
 let filtroSoHoje = false;
+let filtroProx10 = false;
 
 if (SUPABASE_URL === 'SUPABASE_URL' || SUPABASE_ANON_KEY === 'SUPABASE_ANON_KEY') {
   configWarning.style.display = 'block';
@@ -441,14 +441,12 @@ async function carregarGrupos(){
     return;
   }
   todosGrupos = data || [];
-  preencherSelectGrupos();
+  preencherListaGrupos();
 }
 
-function preencherSelectGrupos(valorSelecionado){
-  const atual = valorSelecionado !== undefined ? valorSelecionado : grupoSelect.value;
-  grupoSelect.innerHTML = '<option value="">Sem grupo</option>' +
-    todosGrupos.map(g => `<option value="${g.id}">${escapeHtml(g.nome)}</option>`).join('');
-  grupoSelect.value = atual || '';
+function preencherListaGrupos(){
+  const datalist = document.getElementById('listaGrupos');
+  datalist.innerHTML = todosGrupos.map(g => `<option value="${escapeHtml(g.nome)}"></option>`).join('');
 }
 
 function nomeGrupo(grupoId){
@@ -456,20 +454,6 @@ function nomeGrupo(grupoId){
   const g = todosGrupos.find(x => x.id === grupoId);
   return g ? g.nome : null;
 }
-
-novoGrupoBtn.addEventListener('click', async ()=>{
-  const nome = window.prompt('Nome do novo grupo:');
-  if (!nome || !nome.trim()) return;
-
-  const { data, error } = await supabase.from('grupos').insert({ nome: nome.trim() }).select().single();
-  if (error){
-    mostrarErro('Não foi possível criar o grupo: ' + error.message);
-    return;
-  }
-  todosGrupos.push(data);
-  todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
-  preencherSelectGrupos(data.id);
-});
 
 async function carregar(){
   limparErro();
@@ -489,9 +473,15 @@ async function carregar(){
 
 function atualizarStats(){
   const hojeCount = todosAniversariantes.filter(c => ehAniversarioHoje(c.nascimento)).length;
+  const prox10Count = todosAniversariantes.filter(c=>{
+    const d = proximoAniversarioDias(c.nascimento);
+    return d > 0 && d <= 10;
+  }).length;
   statTotal.textContent = todosAniversariantes.length;
   statToday.textContent = hojeCount;
+  statProx10.textContent = prox10Count;
   statTodayBox.classList.toggle('active', filtroSoHoje);
+  statProx10Box.classList.toggle('active', filtroProx10);
 }
 
 function aplicarFiltros(){
@@ -500,15 +490,23 @@ function aplicarFiltros(){
   const texto = filtroTexto.trim().toLowerCase();
   const filtrados = todosAniversariantes.filter(c=>{
     if (filtroSoHoje && !ehAniversarioHoje(c.nascimento)) return false;
+    if (filtroProx10){
+      const d = proximoAniversarioDias(c.nascimento);
+      if (!(d > 0 && d <= 10)) return false;
+    }
     if (filtroMes){
       const mesNasc = Number(c.nascimento.split('-')[1]);
       if (mesNasc !== filtroMes) return false;
     }
-    if (texto && !c.nome.toLowerCase().includes(texto)) return false;
+    if (texto){
+      const nomeMatch = c.nome.toLowerCase().includes(texto);
+      const grupoMatch = (nomeGrupo(c.grupo_id) || '').toLowerCase().includes(texto);
+      if (!nomeMatch && !grupoMatch) return false;
+    }
     return true;
   });
 
-  const algumFiltroAtivo = !!texto || !!filtroMes || filtroSoHoje;
+  const algumFiltroAtivo = !!texto || !!filtroMes || filtroSoHoje || filtroProx10;
   clearFiltersBtn.classList.toggle('show', algumFiltroAtivo);
 
   renderLista(filtrados, algumFiltroAtivo);
@@ -574,6 +572,7 @@ mesGrid.querySelectorAll('.mes-btn').forEach(btn=>{
     } else {
       filtroMes = mes;
       filtroSoHoje = false;
+      filtroProx10 = false;
     }
     mesGrid.querySelectorAll('.mes-btn').forEach(b=>{
       b.classList.toggle('active', Number(b.dataset.mes) === filtroMes);
@@ -586,6 +585,17 @@ statTodayBox.addEventListener('click', ()=>{
   filtroSoHoje = !filtroSoHoje;
   if (filtroSoHoje){
     filtroMes = null;
+    filtroProx10 = false;
+    mesGrid.querySelectorAll('.mes-btn').forEach(b=> b.classList.remove('active'));
+  }
+  aplicarFiltros();
+});
+
+statProx10Box.addEventListener('click', ()=>{
+  filtroProx10 = !filtroProx10;
+  if (filtroProx10){
+    filtroMes = null;
+    filtroSoHoje = false;
     mesGrid.querySelectorAll('.mes-btn').forEach(b=> b.classList.remove('active'));
   }
   aplicarFiltros();
@@ -595,6 +605,7 @@ clearFiltersBtn.addEventListener('click', ()=>{
   filtroTexto = '';
   filtroMes = null;
   filtroSoHoje = false;
+  filtroProx10 = false;
   buscaInput.value = '';
   mesGrid.querySelectorAll('.mes-btn').forEach(b=> b.classList.remove('active'));
   aplicarFiltros();
@@ -608,7 +619,7 @@ function iniciarEdicao(id){
   nomeInput.value = c.nome;
   nascInput.value = c.nascimento;
   observacaoInput.value = c.observacao || '';
-  preencherSelectGrupos(c.grupo_id || '');
+  grupoInput.value = nomeGrupo(c.grupo_id) || '';
   formTitle.textContent = 'Editar aniversariante';
   saveBtn.textContent = 'Salvar edição';
   cancelEditBtn.style.display = 'inline-block';
@@ -619,7 +630,7 @@ function iniciarEdicao(id){
 function cancelarEdicao(){
   editandoId = null;
   form.reset();
-  preencherSelectGrupos('');
+  grupoInput.value = '';
   formTitle.textContent = 'Novo aniversariante';
   saveBtn.textContent = 'Adicionar';
   cancelEditBtn.style.display = 'none';
@@ -643,9 +654,31 @@ form.addEventListener('submit', async (e)=>{
   limparErro();
   const nome = nomeInput.value.trim();
   const nasc = nascInput.value;
-  const grupoId = grupoSelect.value || null;
+  const grupoTexto = grupoInput.value.trim();
   const observacao = observacaoInput.value.trim() || null;
   if (!nome || !nasc) return;
+
+  let grupoId = null;
+  if (grupoTexto){
+    const existente = todosGrupos.find(g => g.nome.toLowerCase() === grupoTexto.toLowerCase());
+    if (existente){
+      grupoId = existente.id;
+    } else {
+      const criar = window.confirm(`O grupo "${grupoTexto}" ainda não existe. Deseja cadastrá-lo agora?`);
+      if (!criar) return;
+
+      const { data: novoGrupo, error: erroGrupo } = await supabase
+        .from('grupos').insert({ nome: grupoTexto }).select().single();
+      if (erroGrupo){
+        mostrarErro('Não foi possível cadastrar o grupo: ' + erroGrupo.message);
+        return;
+      }
+      todosGrupos.push(novoGrupo);
+      todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
+      preencherListaGrupos();
+      grupoId = novoGrupo.id;
+    }
+  }
 
   saveBtn.disabled = true;
   saveBtn.textContent = 'Salvando…';
