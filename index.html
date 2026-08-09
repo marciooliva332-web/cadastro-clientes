@@ -257,6 +257,73 @@
     border-radius:4px;
     font-family:'IBM Plex Mono',monospace;
   }
+
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(27,35,52,.45);
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff;
+    border-radius:14px;
+    padding:24px;
+    max-width:380px;
+    width:100%;
+    box-shadow:0 20px 50px rgba(27,35,52,.25);
+  }
+  .modal-box-wide{max-width:460px;}
+  .modal-box p{margin:0 0 20px;font-size:14px;color:var(--ink);line-height:1.5;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .modal-header h3{font-family:'Fraunces',serif;font-size:17px;margin:0;}
+  .modal-close{background:transparent;border:none;color:var(--ink-soft);font-size:22px;line-height:1;padding:0 4px;}
+  .modal-close:hover{color:var(--danger);}
+  .link-btn{
+    background:transparent;
+    border:none;
+    color:var(--accent-dark);
+    font-size:12px;
+    font-weight:600;
+    padding:2px 0 0;
+    text-align:left;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .link-btn:hover{color:var(--accent);}
+  .grupo-aviso{margin-top:8px;}
+  .aviso-texto{
+    display:block;
+    font-size:12px;
+    color:var(--birthday);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  .btn-cadastrar-grupo{
+    width:100%;
+    background:transparent;
+    border:1.5px dashed var(--accent);
+    color:var(--accent-dark);
+    padding:10px;
+    font-size:13px;
+    font-weight:600;
+    border-radius:8px;
+  }
+  .btn-cadastrar-grupo:hover{background:var(--accent-soft);}
+  .btn-cadastrar-grupo:disabled{opacity:.6;cursor:not-allowed;}
+  .grupo-add-row{display:flex;gap:8px;margin-bottom:16px;}
+  .grupo-add-row input{flex:1;}
+  .grupo-item{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .grupo-item input{flex:1;}
+  .grupo-save{background:var(--accent-soft);color:var(--accent-dark);padding:8px 12px;font-size:12.5px;white-space:nowrap;}
+  .grupo-save:hover{background:var(--accent);color:#fff;}
+  .grupo-delete{background:transparent;color:var(--danger);border:1px solid transparent;padding:8px 10px;font-size:12.5px;white-space:nowrap;}
+  .grupo-delete:hover{background:#FBEAE8;border-color:#F0C7C2;}
 </style>
 </head>
 <body>
@@ -301,8 +368,13 @@
       </div>
       <div class="field">
         <label for="grupo">Grupo</label>
-        <input type="text" id="grupo" list="listaGrupos" placeholder="Ex: Empresa, Família…">
+        <input type="text" id="grupo" list="listaGrupos" placeholder="Ex: Empresa, Família…" autocomplete="off">
         <datalist id="listaGrupos"></datalist>
+        <div class="grupo-aviso" id="grupoAviso" style="display:none;">
+          <span class="aviso-texto">⚠ Grupo não encontrado na lista.</span>
+          <button type="button" class="btn-cadastrar-grupo" id="cadastrarGrupoBtn">+ Cadastrar este grupo</button>
+        </div>
+        <button type="button" class="link-btn" id="gerenciarGruposBtn">Gerenciar grupos</button>
       </div>
       <div class="field field-full">
         <label for="observacao">Observação</label>
@@ -346,6 +418,31 @@
   <footer>Os dados ficam gravados no seu banco Supabase e podem ser acessados de qualquer dispositivo com este mesmo arquivo.</footer>
 </div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <p id="modalMsg"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="modalCancel">Cancelar</button>
+      <button type="button" class="btn-primary" id="modalOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGruposOverlay">
+  <div class="modal-box modal-box-wide">
+    <div class="modal-header">
+      <h3>Gerenciar grupos</h3>
+      <button type="button" class="modal-close" id="fecharModalGrupos">&times;</button>
+    </div>
+    <div id="modalGruposErro" class="error" style="display:none;"></div>
+    <div class="grupo-add-row">
+      <input type="text" id="novoGrupoNome" placeholder="Nome do novo grupo">
+      <button type="button" class="btn-primary" id="addGrupoBtn">Adicionar</button>
+    </div>
+    <div id="listaGruposGerenciar"></div>
+  </div>
+</div>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
@@ -372,8 +469,23 @@ const mesGrid = document.getElementById('mesGrid');
 const clearFiltersBtn = document.getElementById('clearFilters');
 const formTitle = document.getElementById('formTitle');
 const grupoInput = document.getElementById('grupo');
+const grupoAviso = document.getElementById('grupoAviso');
+const cadastrarGrupoBtn = document.getElementById('cadastrarGrupoBtn');
 const observacaoInput = document.getElementById('observacao');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+const modalOverlay = document.getElementById('modalOverlay');
+const modalMsg = document.getElementById('modalMsg');
+const modalOk = document.getElementById('modalOk');
+const modalCancel = document.getElementById('modalCancel');
+
+const gerenciarGruposBtn = document.getElementById('gerenciarGruposBtn');
+const modalGruposOverlay = document.getElementById('modalGruposOverlay');
+const fecharModalGrupos = document.getElementById('fecharModalGrupos');
+const modalGruposErro = document.getElementById('modalGruposErro');
+const listaGruposGerenciar = document.getElementById('listaGruposGerenciar');
+const novoGrupoNomeInput = document.getElementById('novoGrupoNome');
+const addGrupoBtn = document.getElementById('addGrupoBtn');
 
 let todosAniversariantes = [];
 let todosGrupos = [];
@@ -397,6 +509,35 @@ function mostrarErro(msg){
 
 function limparErro(){
   errorArea.innerHTML = '';
+}
+
+function confirmarModal(mensagem, textoOk = 'Confirmar'){
+  return new Promise(resolve=>{
+    modalMsg.textContent = mensagem;
+    modalOk.textContent = textoOk;
+    modalOverlay.classList.add('show');
+
+    function limpar(){
+      modalOverlay.classList.remove('show');
+      modalOk.removeEventListener('click', onOk);
+      modalCancel.removeEventListener('click', onCancel);
+    }
+    function onOk(){ limpar(); resolve(true); }
+    function onCancel(){ limpar(); resolve(false); }
+
+    modalOk.addEventListener('click', onOk);
+    modalCancel.addEventListener('click', onCancel);
+  });
+}
+
+function mostrarErroModalGrupos(msg){
+  modalGruposErro.textContent = msg;
+  modalGruposErro.style.display = 'block';
+}
+
+function limparErroModalGrupos(){
+  modalGruposErro.style.display = 'none';
+  modalGruposErro.textContent = '';
 }
 
 function calcIdade(dataNascStr){
@@ -454,6 +595,145 @@ function nomeGrupo(grupoId){
   const g = todosGrupos.find(x => x.id === grupoId);
   return g ? g.nome : null;
 }
+
+function verificarGrupo(){
+  const texto = grupoInput.value.trim();
+  if (!texto){
+    grupoAviso.style.display = 'none';
+    return;
+  }
+  const existe = todosGrupos.some(g => g.nome.toLowerCase() === texto.toLowerCase());
+  grupoAviso.style.display = existe ? 'none' : 'block';
+}
+
+grupoInput.addEventListener('input', verificarGrupo);
+
+cadastrarGrupoBtn.addEventListener('click', async ()=>{
+  const nome = grupoInput.value.trim();
+  if (!nome) return;
+
+  cadastrarGrupoBtn.disabled = true;
+  cadastrarGrupoBtn.textContent = 'Cadastrando…';
+
+  const { data, error } = await supabase.from('grupos').insert({ nome }).select().single();
+
+  if (error){
+    mostrarErro('Não foi possível cadastrar o grupo: ' + error.message);
+  } else {
+    todosGrupos.push(data);
+    todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
+    preencherListaGrupos();
+    grupoAviso.style.display = 'none';
+  }
+
+  cadastrarGrupoBtn.disabled = false;
+  cadastrarGrupoBtn.textContent = '+ Cadastrar este grupo';
+});
+
+gerenciarGruposBtn.addEventListener('click', ()=>{
+  limparErroModalGrupos();
+  novoGrupoNomeInput.value = '';
+  renderListaGruposGerenciar();
+  modalGruposOverlay.classList.add('show');
+});
+
+fecharModalGrupos.addEventListener('click', ()=>{
+  modalGruposOverlay.classList.remove('show');
+});
+
+function renderListaGruposGerenciar(){
+  if (todosGrupos.length === 0){
+    listaGruposGerenciar.innerHTML = '<div class="empty">Nenhum grupo cadastrado ainda.</div>';
+    return;
+  }
+
+  listaGruposGerenciar.innerHTML = todosGrupos.map(g => `
+    <div class="grupo-item" data-id="${g.id}">
+      <input type="text" class="grupo-edit-input" value="${escapeHtml(g.nome)}">
+      <button type="button" class="grupo-save" data-id="${g.id}">Salvar</button>
+      <button type="button" class="grupo-delete" data-id="${g.id}">Excluir</button>
+    </div>
+  `).join('');
+
+  listaGruposGerenciar.querySelectorAll('.grupo-save').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      limparErroModalGrupos();
+      const id = btn.dataset.id;
+      const input = listaGruposGerenciar.querySelector(`.grupo-item[data-id="${id}"] .grupo-edit-input`);
+      const novoNome = input.value.trim();
+      if (!novoNome) return;
+
+      const duplicado = todosGrupos.find(g => g.id !== id && g.nome.toLowerCase() === novoNome.toLowerCase());
+      if (duplicado){
+        mostrarErroModalGrupos('Já existe um grupo com esse nome.');
+        return;
+      }
+
+      const { error } = await supabase.from('grupos').update({ nome: novoNome }).eq('id', id);
+      if (error){
+        mostrarErroModalGrupos('Não foi possível renomear o grupo: ' + error.message);
+        return;
+      }
+
+      const g = todosGrupos.find(x => x.id === id);
+      if (g) g.nome = novoNome;
+      todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
+      preencherListaGrupos();
+      renderListaGruposGerenciar();
+      await carregar();
+    });
+  });
+
+  listaGruposGerenciar.querySelectorAll('.grupo-delete').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      limparErroModalGrupos();
+      const id = btn.dataset.id;
+      const g = todosGrupos.find(x => x.id === id);
+      if (!g) return;
+
+      const confirmar = await confirmarModal(
+        `Excluir o grupo "${g.nome}"? Quem estiver nesse grupo ficará sem grupo.`,
+        'Excluir'
+      );
+      if (!confirmar) return;
+
+      const { error } = await supabase.from('grupos').delete().eq('id', id);
+      if (error){
+        mostrarErroModalGrupos('Não foi possível excluir o grupo: ' + error.message);
+        return;
+      }
+
+      todosGrupos = todosGrupos.filter(x => x.id !== id);
+      preencherListaGrupos();
+      renderListaGruposGerenciar();
+      await carregar();
+    });
+  });
+}
+
+addGrupoBtn.addEventListener('click', async ()=>{
+  limparErroModalGrupos();
+  const nome = novoGrupoNomeInput.value.trim();
+  if (!nome) return;
+
+  const existente = todosGrupos.find(g => g.nome.toLowerCase() === nome.toLowerCase());
+  if (existente){
+    mostrarErroModalGrupos('Esse grupo já existe.');
+    return;
+  }
+
+  const { data, error } = await supabase.from('grupos').insert({ nome }).select().single();
+  if (error){
+    mostrarErroModalGrupos('Não foi possível criar o grupo: ' + error.message);
+    return;
+  }
+
+  todosGrupos.push(data);
+  todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
+  preencherListaGrupos();
+  renderListaGruposGerenciar();
+  novoGrupoNomeInput.value = '';
+});
 
 async function carregar(){
   limparErro();
@@ -620,6 +900,7 @@ function iniciarEdicao(id){
   nascInput.value = c.nascimento;
   observacaoInput.value = c.observacao || '';
   grupoInput.value = nomeGrupo(c.grupo_id) || '';
+  grupoAviso.style.display = 'none';
   formTitle.textContent = 'Editar aniversariante';
   saveBtn.textContent = 'Salvar edição';
   cancelEditBtn.style.display = 'inline-block';
@@ -631,6 +912,7 @@ function cancelarEdicao(){
   editandoId = null;
   form.reset();
   grupoInput.value = '';
+  grupoAviso.style.display = 'none';
   formTitle.textContent = 'Novo aniversariante';
   saveBtn.textContent = 'Adicionar';
   cancelEditBtn.style.display = 'none';
@@ -664,7 +946,7 @@ form.addEventListener('submit', async (e)=>{
     if (existente){
       grupoId = existente.id;
     } else {
-      const criar = window.confirm(`O grupo "${grupoTexto}" ainda não existe. Deseja cadastrá-lo agora?`);
+      const criar = await confirmarModal(`O grupo "${grupoTexto}" ainda não existe. Deseja cadastrá-lo agora?`, 'Cadastrar');
       if (!criar) return;
 
       const { data: novoGrupo, error: erroGrupo } = await supabase
