@@ -118,6 +118,37 @@
   .btn-secondary:hover{border-color:var(--danger);color:var(--danger);}
 
   .list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .fab-toggle{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-size:20px;
+    line-height:1;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .fab-toggle:hover{background:var(--accent-dark);}
+  .form-panel{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+    background:var(--bg);
+  }
+  .form-panel-title{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    margin-bottom:12px;
+  }
   .filter-bar{margin-bottom:16px;}
   #busca{width:100%;margin-bottom:12px;}
   .filter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -349,6 +380,28 @@
     </div>
   </header>
 
+  <div class="filter-bar">
+    <input type="text" id="busca" placeholder="Buscar por nome ou grupo…">
+    <div class="filter-row">
+      <button type="button" class="mes-toggle" id="mesToggle">Filtrar por mês</button>
+      <button type="button" class="clear-filters" id="clearFilters">Limpar filtros</button>
+    </div>
+    <div class="mes-grid" id="mesGrid">
+      <button type="button" class="mes-btn" data-mes="1">Jan</button>
+      <button type="button" class="mes-btn" data-mes="2">Fev</button>
+      <button type="button" class="mes-btn" data-mes="3">Mar</button>
+      <button type="button" class="mes-btn" data-mes="4">Abr</button>
+      <button type="button" class="mes-btn" data-mes="5">Mai</button>
+      <button type="button" class="mes-btn" data-mes="6">Jun</button>
+      <button type="button" class="mes-btn" data-mes="7">Jul</button>
+      <button type="button" class="mes-btn" data-mes="8">Ago</button>
+      <button type="button" class="mes-btn" data-mes="9">Set</button>
+      <button type="button" class="mes-btn" data-mes="10">Out</button>
+      <button type="button" class="mes-btn" data-mes="11">Nov</button>
+      <button type="button" class="mes-btn" data-mes="12">Dez</button>
+    </div>
+  </div>
+
   <div id="configWarning" class="config-warning" style="display:none;">
     Configure suas credenciais do Supabase no início do código: troque <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> pelos valores do seu projeto (Project Settings &gt; API).
   </div>
@@ -356,60 +409,41 @@
   <div id="errorArea"></div>
 
   <div class="card">
-    <h2 id="formTitle">Novo aniversariante</h2>
-    <form id="form">
-      <div class="field">
-        <label for="nome">Nome</label>
-        <input type="text" id="nome" placeholder="Ex: Maria Souza" required>
-      </div>
-      <div class="field">
-        <label for="nasc">Data de nascimento</label>
-        <input type="date" id="nasc" required>
-      </div>
-      <div class="field">
-        <label for="grupo">Grupo</label>
-        <input type="text" id="grupo" list="listaGrupos" placeholder="Ex: Empresa, Família…" autocomplete="off">
-        <datalist id="listaGrupos"></datalist>
-        <div class="grupo-aviso" id="grupoAviso" style="display:none;">
-          <span class="aviso-texto">⚠ Grupo não encontrado na lista.</span>
-          <button type="button" class="btn-cadastrar-grupo" id="cadastrarGrupoBtn">+ Cadastrar este grupo</button>
-        </div>
-        <button type="button" class="link-btn" id="gerenciarGruposBtn">Gerenciar grupos</button>
-      </div>
-      <div class="field field-full">
-        <label for="observacao">Observação</label>
-        <textarea id="observacao" placeholder="Observações (opcional)"></textarea>
-      </div>
-      <button type="submit" class="btn-primary" id="saveBtn">Adicionar</button>
-      <button type="button" class="btn-secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
-    </form>
-  </div>
-
-  <div class="card">
     <div class="list-head">
       <h2 style="margin:0;">Aniversariantes cadastrados</h2>
+      <button type="button" class="fab-toggle" id="togglePanelBtn" aria-label="Adicionar aniversariante">+</button>
     </div>
-    <div class="filter-bar">
-      <input type="text" id="busca" placeholder="Buscar por nome ou grupo…">
-      <div class="filter-row">
-        <button type="button" class="mes-toggle" id="mesToggle">Filtrar por mês</button>
-        <button type="button" class="clear-filters" id="clearFilters">Limpar filtros</button>
-      </div>
-      <div class="mes-grid" id="mesGrid">
-        <button type="button" class="mes-btn" data-mes="1">Jan</button>
-        <button type="button" class="mes-btn" data-mes="2">Fev</button>
-        <button type="button" class="mes-btn" data-mes="3">Mar</button>
-        <button type="button" class="mes-btn" data-mes="4">Abr</button>
-        <button type="button" class="mes-btn" data-mes="5">Mai</button>
-        <button type="button" class="mes-btn" data-mes="6">Jun</button>
-        <button type="button" class="mes-btn" data-mes="7">Jul</button>
-        <button type="button" class="mes-btn" data-mes="8">Ago</button>
-        <button type="button" class="mes-btn" data-mes="9">Set</button>
-        <button type="button" class="mes-btn" data-mes="10">Out</button>
-        <button type="button" class="mes-btn" data-mes="11">Nov</button>
-        <button type="button" class="mes-btn" data-mes="12">Dez</button>
-      </div>
+
+    <div id="formPanel" class="form-panel" style="display:none;">
+      <span id="formTitle" class="form-panel-title">Novo aniversariante</span>
+      <form id="form">
+        <div class="field">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" placeholder="Ex: Maria Souza" required>
+        </div>
+        <div class="field">
+          <label for="nasc">Data de nascimento</label>
+          <input type="date" id="nasc" required>
+        </div>
+        <div class="field">
+          <label for="grupo">Grupo</label>
+          <input type="text" id="grupo" list="listaGrupos" placeholder="Ex: Empresa, Família…" autocomplete="off">
+          <datalist id="listaGrupos"></datalist>
+          <div class="grupo-aviso" id="grupoAviso" style="display:none;">
+            <span class="aviso-texto">⚠ Grupo não encontrado na lista.</span>
+            <button type="button" class="btn-cadastrar-grupo" id="cadastrarGrupoBtn">+ Cadastrar este grupo</button>
+          </div>
+          <button type="button" class="link-btn" id="gerenciarGruposBtn">Gerenciar grupos</button>
+        </div>
+        <div class="field field-full">
+          <label for="observacao">Observação</label>
+          <textarea id="observacao" placeholder="Observações (opcional)"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" id="saveBtn">Adicionar</button>
+        <button type="button" class="btn-secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
+      </form>
     </div>
+
     <div id="listArea">
       <div class="loading">Carregando dados do Supabase…</div>
     </div>
@@ -468,6 +502,8 @@ const mesToggle = document.getElementById('mesToggle');
 const mesGrid = document.getElementById('mesGrid');
 const clearFiltersBtn = document.getElementById('clearFilters');
 const formTitle = document.getElementById('formTitle');
+const togglePanelBtn = document.getElementById('togglePanelBtn');
+const formPanel = document.getElementById('formPanel');
 const grupoInput = document.getElementById('grupo');
 const grupoAviso = document.getElementById('grupoAviso');
 const cadastrarGrupoBtn = document.getElementById('cadastrarGrupoBtn');
@@ -891,6 +927,26 @@ clearFiltersBtn.addEventListener('click', ()=>{
   aplicarFiltros();
 });
 
+function abrirPainel(){
+  formPanel.style.display = 'block';
+  togglePanelBtn.textContent = '×';
+  togglePanelBtn.setAttribute('aria-label', 'Fechar formulário');
+}
+
+function fecharPainel(){
+  formPanel.style.display = 'none';
+  togglePanelBtn.textContent = '+';
+  togglePanelBtn.setAttribute('aria-label', 'Adicionar aniversariante');
+}
+
+togglePanelBtn.addEventListener('click', ()=>{
+  if (formPanel.style.display === 'block'){
+    cancelarEdicao();
+  } else {
+    abrirPainel();
+  }
+});
+
 function iniciarEdicao(id){
   const c = todosAniversariantes.find(x => x.id === id);
   if (!c) return;
@@ -904,8 +960,9 @@ function iniciarEdicao(id){
   formTitle.textContent = 'Editar aniversariante';
   saveBtn.textContent = 'Salvar edição';
   cancelEditBtn.style.display = 'inline-block';
+  abrirPainel();
   nomeInput.focus();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function cancelarEdicao(){
@@ -916,6 +973,7 @@ function cancelarEdicao(){
   formTitle.textContent = 'Novo aniversariante';
   saveBtn.textContent = 'Adicionar';
   cancelEditBtn.style.display = 'none';
+  fecharPainel();
 }
 
 cancelEditBtn.addEventListener('click', cancelarEdicao);
