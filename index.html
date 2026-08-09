@@ -269,6 +269,12 @@
     font-weight:600;
   }
   .del:hover{background:#FBEAE8;border-color:#F0C7C2;}
+  .list-counter{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:12px;
+  }
   .row-right{display:flex;align-items:center;gap:10px;}
   footer{text-align:center;color:var(--ink-soft);font-size:12px;margin-top:26px;}
   .loading{text-align:center;color:var(--ink-soft);font-size:13px;padding:20px;}
@@ -860,7 +866,12 @@ function renderLista(clientes, algumFiltroAtivo){
       </li>`;
   }).join('');
 
-  listArea.innerHTML = `<ul>${html}</ul>`;
+  const total = todosAniversariantes.length;
+  const contagem = algumFiltroAtivo
+    ? `${clientes.length} de ${total} aniversariante${total === 1 ? '' : 's'}`
+    : `${total} aniversariante${total === 1 ? '' : 's'}`;
+
+  listArea.innerHTML = `<ul>${html}</ul><div class="list-counter">${contagem}</div>`;
 
   listArea.querySelectorAll('.edit').forEach(btn=>{
     btn.addEventListener('click', ()=> iniciarEdicao(btn.dataset.id));
