@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Clientes — Supabase</title>
+<title>Cadastro de Aniversariantes — Supabase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -61,6 +61,10 @@
   .stat .n{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;display:block;line-height:1.1;}
   .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
   .stat.today .n{color:var(--birthday);}
+  .stat.clickable{cursor:pointer;transition:border-color .15s ease, background .15s ease;}
+  .stat.clickable:hover{border-color:var(--birthday);}
+  .stat.today.active{background:var(--birthday);border-color:var(--birthday);}
+  .stat.today.active .n,.stat.today.active .l{color:#fff;}
 
   .card{
     background:var(--surface);
@@ -83,6 +87,20 @@
     background:#fff;
   }
   input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  textarea,select{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:44px;width:100%;}
+  textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .field-full{flex-basis:100%;}
+  .grupo-row{display:flex;gap:8px;}
+  .grupo-row select{flex:1;}
   button{
     border:none;
     border-radius:8px;
@@ -96,8 +114,53 @@
   .btn-primary{background:var(--accent);color:#fff;}
   .btn-primary:hover{background:var(--accent-dark);}
   .btn-primary:disabled{background:#A9B4B1;cursor:not-allowed;}
+  .btn-add-grupo{background:var(--accent-soft);color:var(--accent-dark);padding:10px 14px;font-size:13px;white-space:nowrap;}
+  .btn-add-grupo:hover{background:var(--accent);color:#fff;}
+  .btn-secondary{background:transparent;color:var(--ink-soft);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--danger);color:var(--danger);}
 
   .list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .filter-bar{margin-bottom:16px;}
+  #busca{width:100%;margin-bottom:12px;}
+  .filter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .mes-toggle{
+    background:transparent;
+    color:var(--accent-dark);
+    border:1px solid var(--border);
+    padding:7px 12px;
+    font-size:13px;
+  }
+  .mes-toggle:hover{border-color:var(--accent);}
+  .mes-toggle.active{background:var(--accent-soft);border-color:var(--accent);}
+  .clear-filters{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid transparent;
+    padding:7px 10px;
+    font-size:12.5px;
+    display:none;
+  }
+  .clear-filters:hover{color:var(--danger);}
+  .clear-filters.show{display:inline-block;}
+  .mes-grid{
+    display:none;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .mes-grid.show{display:grid;}
+  .mes-btn{
+    background:#fff;
+    border:1px solid var(--border);
+    color:var(--ink-soft);
+    padding:9px 4px;
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+  }
+  .mes-btn:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .mes-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
   .empty{text-align:center;color:var(--ink-soft);font-size:14px;padding:30px 10px;}
   .error{
     background:#FBEAE8;
@@ -138,6 +201,26 @@
   .c-name{font-weight:600;font-size:15px;}
   .c-meta{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
   li.client.today .c-meta{color:#8A5A16;}
+  .tag-grupo{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:20px;
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    margin-top:6px;
+  }
+  .c-obs{font-size:12.5px;color:var(--ink-soft);margin-top:6px;font-style:italic;}
+  .edit{
+    background:transparent;
+    color:var(--accent-dark);
+    border:1px solid transparent;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:600;
+  }
+  .edit:hover{background:var(--accent-soft);border-color:var(--accent-soft);}
   .c-age{
     font-family:'IBM Plex Mono',monospace;
     font-size:13px;
@@ -182,15 +265,15 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Cadastro de Clientes</h1>
+      <h1>Cadastro de Aniversariantes</h1>
       <p class="sub">Nome, data de nascimento, idade e aniversariantes do dia — conectado ao Supabase</p>
     </div>
     <div class="stats">
       <div class="stat">
         <span class="n" id="statTotal">0</span>
-        <span class="l">Clientes</span>
+        <span class="l">Aniversariantes</span>
       </div>
-      <div class="stat today">
+      <div class="stat today clickable" id="statTodayBox" title="Clique para ver só os aniversariantes de hoje">
         <span class="n" id="statToday">0</span>
         <span class="l">Hoje</span>
       </div>
@@ -204,7 +287,7 @@
   <div id="errorArea"></div>
 
   <div class="card">
-    <h2>Novo cliente</h2>
+    <h2 id="formTitle">Novo aniversariante</h2>
     <form id="form">
       <div class="field">
         <label for="nome">Nome</label>
@@ -214,13 +297,48 @@
         <label for="nasc">Data de nascimento</label>
         <input type="date" id="nasc" required>
       </div>
+      <div class="field">
+        <label for="grupo">Grupo</label>
+        <div class="grupo-row">
+          <select id="grupo">
+            <option value="">Sem grupo</option>
+          </select>
+          <button type="button" class="btn-add-grupo" id="novoGrupoBtn">+ Novo</button>
+        </div>
+      </div>
+      <div class="field field-full">
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" placeholder="Observações (opcional)"></textarea>
+      </div>
       <button type="submit" class="btn-primary" id="saveBtn">Adicionar</button>
+      <button type="button" class="btn-secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
     </form>
   </div>
 
   <div class="card">
     <div class="list-head">
-      <h2 style="margin:0;">Clientes cadastrados</h2>
+      <h2 style="margin:0;">Aniversariantes cadastrados</h2>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="busca" placeholder="Buscar por nome…">
+      <div class="filter-row">
+        <button type="button" class="mes-toggle" id="mesToggle">Filtrar por mês</button>
+        <button type="button" class="clear-filters" id="clearFilters">Limpar filtros</button>
+      </div>
+      <div class="mes-grid" id="mesGrid">
+        <button type="button" class="mes-btn" data-mes="1">Jan</button>
+        <button type="button" class="mes-btn" data-mes="2">Fev</button>
+        <button type="button" class="mes-btn" data-mes="3">Mar</button>
+        <button type="button" class="mes-btn" data-mes="4">Abr</button>
+        <button type="button" class="mes-btn" data-mes="5">Mai</button>
+        <button type="button" class="mes-btn" data-mes="6">Jun</button>
+        <button type="button" class="mes-btn" data-mes="7">Jul</button>
+        <button type="button" class="mes-btn" data-mes="8">Ago</button>
+        <button type="button" class="mes-btn" data-mes="9">Set</button>
+        <button type="button" class="mes-btn" data-mes="10">Out</button>
+        <button type="button" class="mes-btn" data-mes="11">Nov</button>
+        <button type="button" class="mes-btn" data-mes="12">Dez</button>
+      </div>
     </div>
     <div id="listArea">
       <div class="loading">Carregando dados do Supabase…</div>
@@ -246,7 +364,24 @@ const nascInput = document.getElementById('nasc');
 const listArea = document.getElementById('listArea');
 const statTotal = document.getElementById('statTotal');
 const statToday = document.getElementById('statToday');
+const statTodayBox = document.getElementById('statTodayBox');
 const saveBtn = document.getElementById('saveBtn');
+const buscaInput = document.getElementById('busca');
+const mesToggle = document.getElementById('mesToggle');
+const mesGrid = document.getElementById('mesGrid');
+const clearFiltersBtn = document.getElementById('clearFilters');
+const formTitle = document.getElementById('formTitle');
+const grupoSelect = document.getElementById('grupo');
+const novoGrupoBtn = document.getElementById('novoGrupoBtn');
+const observacaoInput = document.getElementById('observacao');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+let todosAniversariantes = [];
+let todosGrupos = [];
+let editandoId = null;
+let filtroTexto = '';
+let filtroMes = null;
+let filtroSoHoje = false;
 
 if (SUPABASE_URL === 'SUPABASE_URL' || SUPABASE_ANON_KEY === 'SUPABASE_ANON_KEY') {
   configWarning.style.display = 'block';
@@ -299,26 +434,91 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+async function carregarGrupos(){
+  const { data, error } = await supabase.from('grupos').select('id, nome').order('nome');
+  if (error){
+    mostrarErro('Não foi possível carregar os grupos: ' + error.message);
+    return;
+  }
+  todosGrupos = data || [];
+  preencherSelectGrupos();
+}
+
+function preencherSelectGrupos(valorSelecionado){
+  const atual = valorSelecionado !== undefined ? valorSelecionado : grupoSelect.value;
+  grupoSelect.innerHTML = '<option value="">Sem grupo</option>' +
+    todosGrupos.map(g => `<option value="${g.id}">${escapeHtml(g.nome)}</option>`).join('');
+  grupoSelect.value = atual || '';
+}
+
+function nomeGrupo(grupoId){
+  if (!grupoId) return null;
+  const g = todosGrupos.find(x => x.id === grupoId);
+  return g ? g.nome : null;
+}
+
+novoGrupoBtn.addEventListener('click', async ()=>{
+  const nome = window.prompt('Nome do novo grupo:');
+  if (!nome || !nome.trim()) return;
+
+  const { data, error } = await supabase.from('grupos').insert({ nome: nome.trim() }).select().single();
+  if (error){
+    mostrarErro('Não foi possível criar o grupo: ' + error.message);
+    return;
+  }
+  todosGrupos.push(data);
+  todosGrupos.sort((a,b)=> a.nome.localeCompare(b.nome));
+  preencherSelectGrupos(data.id);
+});
+
 async function carregar(){
   limparErro();
   const { data, error } = await supabase
     .from('clientes')
-    .select('id, nome, nascimento');
+    .select('id, nome, nascimento, observacao, grupo_id');
 
   if (error){
-    mostrarErro('Não foi possível carregar os clientes: ' + error.message);
+    mostrarErro('Não foi possível carregar os aniversariantes: ' + error.message);
     listArea.innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
     return;
   }
 
-  render(data || []);
+  todosAniversariantes = data || [];
+  aplicarFiltros();
 }
 
-function render(clientes){
+function atualizarStats(){
+  const hojeCount = todosAniversariantes.filter(c => ehAniversarioHoje(c.nascimento)).length;
+  statTotal.textContent = todosAniversariantes.length;
+  statToday.textContent = hojeCount;
+  statTodayBox.classList.toggle('active', filtroSoHoje);
+}
+
+function aplicarFiltros(){
+  atualizarStats();
+
+  const texto = filtroTexto.trim().toLowerCase();
+  const filtrados = todosAniversariantes.filter(c=>{
+    if (filtroSoHoje && !ehAniversarioHoje(c.nascimento)) return false;
+    if (filtroMes){
+      const mesNasc = Number(c.nascimento.split('-')[1]);
+      if (mesNasc !== filtroMes) return false;
+    }
+    if (texto && !c.nome.toLowerCase().includes(texto)) return false;
+    return true;
+  });
+
+  const algumFiltroAtivo = !!texto || !!filtroMes || filtroSoHoje;
+  clearFiltersBtn.classList.toggle('show', algumFiltroAtivo);
+
+  renderLista(filtrados, algumFiltroAtivo);
+}
+
+function renderLista(clientes, algumFiltroAtivo){
   if (clientes.length === 0){
-    listArea.innerHTML = '<div class="empty">Nenhum cliente cadastrado ainda. Adicione o primeiro acima.</div>';
-    statTotal.textContent = '0';
-    statToday.textContent = '0';
+    listArea.innerHTML = todosAniversariantes.length === 0
+      ? '<div class="empty">Nenhum aniversariante cadastrado ainda. Adicione o primeiro acima.</div>'
+      : '<div class="empty">Nenhum aniversariante encontrado com esse filtro.</div>';
     return;
   }
 
@@ -326,32 +526,106 @@ function render(clientes){
     proximoAniversarioDias(a.nascimento) - proximoAniversarioDias(b.nascimento)
   );
 
-  let aniversariantesHoje = 0;
   const html = ordenados.map(c=>{
     const idade = calcIdade(c.nascimento);
     const hoje = ehAniversarioHoje(c.nascimento);
-    if (hoje) aniversariantesHoje++;
+    const grupo = nomeGrupo(c.grupo_id);
     return `
       <li class="client${hoje ? ' today' : ''}">
         <div>
           <div class="c-name">${escapeHtml(c.nome)}</div>
           <div class="c-meta">${formatarData(c.nascimento)}</div>
+          ${grupo ? `<span class="tag-grupo">${escapeHtml(grupo)}</span>` : ''}
+          ${c.observacao ? `<div class="c-obs">${escapeHtml(c.observacao)}</div>` : ''}
         </div>
         <div class="row-right">
           <span class="c-age">${idade} anos</span>
+          <button class="edit" data-id="${c.id}">Editar</button>
           <button class="del" data-id="${c.id}">Remover</button>
         </div>
       </li>`;
   }).join('');
 
   listArea.innerHTML = `<ul>${html}</ul>`;
-  statTotal.textContent = clientes.length;
-  statToday.textContent = aniversariantesHoje;
 
+  listArea.querySelectorAll('.edit').forEach(btn=>{
+    btn.addEventListener('click', ()=> iniciarEdicao(btn.dataset.id));
+  });
   listArea.querySelectorAll('.del').forEach(btn=>{
     btn.addEventListener('click', ()=> remover(btn.dataset.id));
   });
 }
+
+buscaInput.addEventListener('input', ()=>{
+  filtroTexto = buscaInput.value;
+  aplicarFiltros();
+});
+
+mesToggle.addEventListener('click', ()=>{
+  mesGrid.classList.toggle('show');
+  mesToggle.classList.toggle('active', mesGrid.classList.contains('show'));
+});
+
+mesGrid.querySelectorAll('.mes-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const mes = Number(btn.dataset.mes);
+    if (filtroMes === mes){
+      filtroMes = null;
+    } else {
+      filtroMes = mes;
+      filtroSoHoje = false;
+    }
+    mesGrid.querySelectorAll('.mes-btn').forEach(b=>{
+      b.classList.toggle('active', Number(b.dataset.mes) === filtroMes);
+    });
+    aplicarFiltros();
+  });
+});
+
+statTodayBox.addEventListener('click', ()=>{
+  filtroSoHoje = !filtroSoHoje;
+  if (filtroSoHoje){
+    filtroMes = null;
+    mesGrid.querySelectorAll('.mes-btn').forEach(b=> b.classList.remove('active'));
+  }
+  aplicarFiltros();
+});
+
+clearFiltersBtn.addEventListener('click', ()=>{
+  filtroTexto = '';
+  filtroMes = null;
+  filtroSoHoje = false;
+  buscaInput.value = '';
+  mesGrid.querySelectorAll('.mes-btn').forEach(b=> b.classList.remove('active'));
+  aplicarFiltros();
+});
+
+function iniciarEdicao(id){
+  const c = todosAniversariantes.find(x => x.id === id);
+  if (!c) return;
+
+  editandoId = id;
+  nomeInput.value = c.nome;
+  nascInput.value = c.nascimento;
+  observacaoInput.value = c.observacao || '';
+  preencherSelectGrupos(c.grupo_id || '');
+  formTitle.textContent = 'Editar aniversariante';
+  saveBtn.textContent = 'Salvar edição';
+  cancelEditBtn.style.display = 'inline-block';
+  nomeInput.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicao(){
+  editandoId = null;
+  form.reset();
+  preencherSelectGrupos('');
+  formTitle.textContent = 'Novo aniversariante';
+  saveBtn.textContent = 'Adicionar';
+  cancelEditBtn.style.display = 'none';
+}
+
+cancelEditBtn.addEventListener('click', cancelarEdicao);
 
 async function remover(id){
   limparErro();
@@ -360,6 +634,7 @@ async function remover(id){
     mostrarErro('Não foi possível remover: ' + error.message);
     return;
   }
+  if (editandoId === id) cancelarEdicao();
   carregar();
 }
 
@@ -368,27 +643,33 @@ form.addEventListener('submit', async (e)=>{
   limparErro();
   const nome = nomeInput.value.trim();
   const nasc = nascInput.value;
+  const grupoId = grupoSelect.value || null;
+  const observacao = observacaoInput.value.trim() || null;
   if (!nome || !nasc) return;
 
   saveBtn.disabled = true;
   saveBtn.textContent = 'Salvando…';
 
-  const { error } = await supabase.from('clientes').insert({ nome, nascimento: nasc });
+  const payload = { nome, nascimento: nasc, grupo_id: grupoId, observacao };
+  const { error } = editandoId
+    ? await supabase.from('clientes').update(payload).eq('id', editandoId)
+    : await supabase.from('clientes').insert(payload);
 
   if (error){
     mostrarErro('Não foi possível salvar: ' + error.message);
+    saveBtn.disabled = false;
+    saveBtn.textContent = editandoId ? 'Salvar edição' : 'Adicionar';
   } else {
-    nomeInput.value = '';
-    nascInput.value = '';
+    const estavaEditando = !!editandoId;
+    cancelarEdicao();
+    saveBtn.disabled = false;
     await carregar();
+    if (!estavaEditando) nomeInput.focus();
   }
-
-  saveBtn.disabled = false;
-  saveBtn.textContent = 'Adicionar';
-  nomeInput.focus();
 });
 
 if (SUPABASE_URL !== 'SUPABASE_URL' && SUPABASE_ANON_KEY !== 'SUPABASE_ANON_KEY') {
+  carregarGrupos();
   carregar();
 }
 </script>
