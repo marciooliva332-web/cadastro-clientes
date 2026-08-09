@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Clientes</title>
+<title>Cadastro de Clientes — Supabase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -48,15 +48,8 @@
     margin:0 0 4px;
     letter-spacing:-0.01em;
   }
-  .sub{
-    color:var(--ink-soft);
-    font-size:14px;
-    margin:0;
-  }
-  .stats{
-    display:flex;
-    gap:10px;
-  }
+  .sub{color:var(--ink-soft);font-size:14px;margin:0;}
+  .stats{display:flex;gap:10px;}
   .stat{
     background:var(--surface);
     border:1px solid var(--border);
@@ -65,19 +58,8 @@
     text-align:center;
     min-width:76px;
   }
-  .stat .n{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:20px;
-    font-weight:600;
-    display:block;
-    line-height:1.1;
-  }
-  .stat .l{
-    font-size:11px;
-    color:var(--ink-soft);
-    text-transform:uppercase;
-    letter-spacing:.04em;
-  }
+  .stat .n{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;display:block;line-height:1.1;}
+  .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
   .stat.today .n{color:var(--birthday);}
 
   .card{
@@ -87,32 +69,10 @@
     padding:22px;
     margin-bottom:20px;
   }
-  .card h2{
-    font-family:'Fraunces',serif;
-    font-size:17px;
-    font-weight:600;
-    margin:0 0 16px;
-  }
-  form{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    align-items:flex-end;
-  }
-  .field{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    flex:1;
-    min-width:160px;
-  }
-  label{
-    font-size:12px;
-    font-weight:600;
-    color:var(--ink-soft);
-    text-transform:uppercase;
-    letter-spacing:.03em;
-  }
+  .card h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0 0 16px;}
+  form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px;}
+  label{font-size:12px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
   input{
     border:1px solid var(--border);
     border-radius:8px;
@@ -122,11 +82,7 @@
     color:var(--ink);
     background:#fff;
   }
-  input:focus{
-    outline:2px solid var(--accent);
-    outline-offset:1px;
-    border-color:var(--accent);
-  }
+  input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
   button{
     border:none;
     border-radius:8px;
@@ -137,24 +93,20 @@
     cursor:pointer;
     transition:background .15s ease;
   }
-  .btn-primary{
-    background:var(--accent);
-    color:#fff;
-  }
+  .btn-primary{background:var(--accent);color:#fff;}
   .btn-primary:hover{background:var(--accent-dark);}
   .btn-primary:disabled{background:#A9B4B1;cursor:not-allowed;}
 
-  .list-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
-  }
-  .empty{
-    text-align:center;
-    color:var(--ink-soft);
-    font-size:14px;
-    padding:30px 10px;
+  .list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .empty{text-align:center;color:var(--ink-soft);font-size:14px;padding:30px 10px;}
+  .error{
+    background:#FBEAE8;
+    border:1px solid #F0C7C2;
+    color:var(--danger);
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:13px;
+    margin-bottom:16px;
   }
   ul{list-style:none;margin:0;padding:0;}
   li.client{
@@ -169,10 +121,7 @@
     margin-bottom:10px;
     overflow:hidden;
   }
-  li.client.today{
-    border-color:var(--birthday);
-    background:var(--birthday-soft);
-  }
+  li.client.today{border-color:var(--birthday);background:var(--birthday-soft);}
   li.client.today::before{
     content:"HOJE";
     position:absolute;
@@ -186,16 +135,8 @@
     letter-spacing:.05em;
     padding:2px 30px;
   }
-  .c-name{
-    font-weight:600;
-    font-size:15px;
-  }
-  .c-meta{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
-    color:var(--ink-soft);
-    margin-top:2px;
-  }
+  .c-name{font-weight:600;font-size:15px;}
+  .c-meta{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
   li.client.today .c-meta{color:#8A5A16;}
   .c-age{
     font-family:'IBM Plex Mono',monospace;
@@ -206,10 +147,7 @@
     border-radius:20px;
     white-space:nowrap;
   }
-  li.client.today .c-age{
-    background:var(--birthday);
-    color:#fff;
-  }
+  li.client.today .c-age{background:var(--birthday);color:#fff;}
   .del{
     background:transparent;
     color:var(--danger);
@@ -220,13 +158,24 @@
   }
   .del:hover{background:#FBEAE8;border-color:#F0C7C2;}
   .row-right{display:flex;align-items:center;gap:10px;}
-  footer{
-    text-align:center;
-    color:var(--ink-soft);
-    font-size:12px;
-    margin-top:26px;
-  }
+  footer{text-align:center;color:var(--ink-soft);font-size:12px;margin-top:26px;}
   .loading{text-align:center;color:var(--ink-soft);font-size:13px;padding:20px;}
+  .config-warning{
+    background:#FDF3E1;
+    border:1px solid #F0DDB0;
+    color:#8A5A16;
+    border-radius:8px;
+    padding:14px 16px;
+    font-size:13px;
+    margin-bottom:20px;
+    line-height:1.5;
+  }
+  .config-warning code{
+    background:#fff;
+    padding:1px 5px;
+    border-radius:4px;
+    font-family:'IBM Plex Mono',monospace;
+  }
 </style>
 </head>
 <body>
@@ -234,7 +183,7 @@
   <header>
     <div>
       <h1>Cadastro de Clientes</h1>
-      <p class="sub">Nome, data de nascimento, idade e aniversariantes do dia</p>
+      <p class="sub">Nome, data de nascimento, idade e aniversariantes do dia — conectado ao Supabase</p>
     </div>
     <div class="stats">
       <div class="stat">
@@ -247,6 +196,12 @@
       </div>
     </div>
   </header>
+
+  <div id="configWarning" class="config-warning" style="display:none;">
+    Configure suas credenciais do Supabase no início do código: troque <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> pelos valores do seu projeto (Project Settings &gt; API).
+  </div>
+
+  <div id="errorArea"></div>
 
   <div class="card">
     <h2>Novo cliente</h2>
@@ -268,14 +223,23 @@
       <h2 style="margin:0;">Clientes cadastrados</h2>
     </div>
     <div id="listArea">
-      <div class="loading">Carregando dados salvos…</div>
+      <div class="loading">Carregando dados do Supabase…</div>
     </div>
   </div>
 
-  <footer>Os dados ficam salvos automaticamente e continuam disponíveis da próxima vez que você abrir este app.</footer>
+  <footer>Os dados ficam gravados no seu banco Supabase e podem ser acessados de qualquer dispositivo com este mesmo arquivo.</footer>
 </div>
 
-<script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ====== COLE SUAS CREDENCIAIS AQUI ======
+const SUPABASE_URL = 'https://ohgbrrtovecoxxqqhprx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_KTKoLYf_m6yyrT2Ip96mmA_dg_TEog2';
+// =========================================
+
+const configWarning = document.getElementById('configWarning');
+const errorArea = document.getElementById('errorArea');
 const form = document.getElementById('form');
 const nomeInput = document.getElementById('nome');
 const nascInput = document.getElementById('nasc');
@@ -284,8 +248,21 @@ const statTotal = document.getElementById('statTotal');
 const statToday = document.getElementById('statToday');
 const saveBtn = document.getElementById('saveBtn');
 
-const STORAGE_KEY = 'clientes';
-let clientes = [];
+if (SUPABASE_URL === 'SUPABASE_URL' || SUPABASE_ANON_KEY === 'SUPABASE_ANON_KEY') {
+  configWarning.style.display = 'block';
+  listArea.innerHTML = '<div class="empty">Configure as credenciais para carregar os dados.</div>';
+  saveBtn.disabled = true;
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function mostrarErro(msg){
+  errorArea.innerHTML = `<div class="error">${msg}</div>`;
+}
+
+function limparErro(){
+  errorArea.innerHTML = '';
+}
 
 function calcIdade(dataNascStr){
   const nasc = new Date(dataNascStr + 'T00:00:00');
@@ -316,25 +293,28 @@ function proximoAniversarioDias(dataNascStr){
   return Math.round((prox - hoje) / 86400000);
 }
 
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 async function carregar(){
-  try{
-    const result = await window.storage.get(STORAGE_KEY, false);
-    clientes = result ? JSON.parse(result.value) : [];
-  }catch(e){
-    clientes = [];
+  limparErro();
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id, nome, nascimento');
+
+  if (error){
+    mostrarErro('Não foi possível carregar os clientes: ' + error.message);
+    listArea.innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+    return;
   }
-  render();
+
+  render(data || []);
 }
 
-async function salvar(){
-  try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(clientes), false);
-  }catch(e){
-    console.error('Erro ao salvar', e);
-  }
-}
-
-function render(){
+function render(clientes){
   if (clientes.length === 0){
     listArea.innerHTML = '<div class="empty">Nenhum cliente cadastrado ainda. Adicione o primeiro acima.</div>';
     statTotal.textContent = '0';
@@ -342,11 +322,9 @@ function render(){
     return;
   }
 
-  const ordenados = [...clientes].sort((a,b)=>{
-    const diasA = proximoAniversarioDias(a.nascimento);
-    const diasB = proximoAniversarioDias(b.nascimento);
-    return diasA - diasB;
-  });
+  const ordenados = [...clientes].sort((a,b)=>
+    proximoAniversarioDias(a.nascimento) - proximoAniversarioDias(b.nascimento)
+  );
 
   let aniversariantesHoje = 0;
   const html = ordenados.map(c=>{
@@ -375,20 +353,19 @@ function render(){
   });
 }
 
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 async function remover(id){
-  clientes = clientes.filter(c => c.id !== id);
-  render();
-  await salvar();
+  limparErro();
+  const { error } = await supabase.from('clientes').delete().eq('id', id);
+  if (error){
+    mostrarErro('Não foi possível remover: ' + error.message);
+    return;
+  }
+  carregar();
 }
 
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
+  limparErro();
   const nome = nomeInput.value.trim();
   const nasc = nascInput.value;
   if (!nome || !nasc) return;
@@ -396,23 +373,24 @@ form.addEventListener('submit', async (e)=>{
   saveBtn.disabled = true;
   saveBtn.textContent = 'Salvando…';
 
-  clientes.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
-    nome,
-    nascimento: nasc
-  });
+  const { error } = await supabase.from('clientes').insert({ nome, nascimento: nasc });
 
-  render();
-  await salvar();
+  if (error){
+    mostrarErro('Não foi possível salvar: ' + error.message);
+  } else {
+    nomeInput.value = '';
+    nascInput.value = '';
+    await carregar();
+  }
 
-  nomeInput.value = '';
-  nascInput.value = '';
   saveBtn.disabled = false;
   saveBtn.textContent = 'Adicionar';
   nomeInput.focus();
 });
 
-carregar();
+if (SUPABASE_URL !== 'SUPABASE_URL' && SUPABASE_ANON_KEY !== 'SUPABASE_ANON_KEY') {
+  carregar();
+}
 </script>
 </body>
 </html>
